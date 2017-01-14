@@ -263,7 +263,7 @@ dim(dtp)
 
 The data contains 270 countries over 32 years (from 1980 to 2011). Note that the LEB dataset previously explored had only 260 countries but spanned a much longer period. To compare the two, we will need to abandon some of the data.
 
-## Evolution of DTP3 Immunization over time
+## Evolution of DTP3 Immunization over Time
 
 We first need to convert the dataset into a long format:
 
@@ -353,4 +353,6 @@ grid.arrange(p1, p2, p3, p4, ncol = 2)
 ```
 
 As with Life Expectancy at Birth, the biggest gains happened in the poorer countries. The lowest group however is still far from the levels reached by the other countries and still has more dispersion.
+
+## Life Expectancy at Birth vs. DTP3 Immunization of 1-year-olds
 
