@@ -126,11 +126,14 @@ $(document).ready(function () {
 <pre class="r"><code>knitr::opts_chunk$set(echo = TRUE)</code></pre>
 <div id="introduction" class="section level1">
 <h1>Introduction</h1>
-<p>This study is an exercise of Problem Set 1 in the “Exploratory Data Analysis with R” course, part of Udacity’s Data Analyst Nanodegree curriculum. In this study, we select a dataset from Gapminder (www.gapminder.org/data) and perform a short analysis using different types of visualisations.</p>
+<p>This study is a Problem Set of the “Data Analysis with R” course, part of Udacity’s Data Analyst Nanodegree curriculum. In this study, we select datasets from <a href="www.gapminder.org/data">Gapminder</a> and perform exploratory analyses using different types of visualisations.</p>
 <p>For educational purposes, we make the code visible. The code is developped using R and the following libraries: tidyr, dplyr, ggplot2, gridExtra and RColorBrewer.</p>
+<hr />
 </div>
-<div id="questions" class="section level1">
-<h1>Questions</h1>
+<div id="life-expectancy-at-birth-over-time" class="section level1">
+<h1>1. Life Expectancy at Birth over Time</h1>
+<div id="questions" class="section level2">
+<h2>Questions</h2>
 <p>The questions we would like to answer are the following:</p>
 <ul>
 <li>How did Life Expectancy at Birth (LEB) and its distribution among countries evolve overall since the middle of the 20th century?</li>
@@ -138,8 +141,8 @@ $(document).ready(function () {
 <li>How did the evolution of LEB compare between countries of different wealth?</li>
 </ul>
 </div>
-<div id="data-load" class="section level1">
-<h1>Data Load</h1>
+<div id="data-load" class="section level2">
+<h2>Data Load</h2>
 <p>We select the Life Expectancy At Birth dataset. We download the file, save it as a .tsv (“tabulation-separated values”) and load it into R:</p>
 <pre class="r"><code>require(tidyr)</code></pre>
 <pre><code>## Loading required package: tidyr</code></pre>
@@ -191,8 +194,8 @@ dim(le)</code></pre>
 ## 5               Algeria 42.77 43.03 43.50 43.96</code></pre>
 <p>The data contains 260 countries and covers 67 years (+ the “country” column).</p>
 </div>
-<div id="leb-distribution-in-1950-vs.2016" class="section level1">
-<h1>LEB distribution in 1950 vs. 2016</h1>
+<div id="leb-distribution-in-1950-vs.2016" class="section level2">
+<h2>LEB distribution in 1950 vs. 2016</h2>
 <p>Let’s look at some summary statistics and plot the data distribution for 1950 and 2016 (first and latest year in the sample):</p>
 <pre class="r"><code># Some summary statistics for 1950 and 2016:
 print(&quot;The World in 1950:&quot;)</code></pre>
@@ -245,6 +248,7 @@ print(le_decrease)</code></pre>
 ## &lt;0 rows&gt; (or 0-length row.names)</code></pre>
 <p>Every single country has had improvements to their LEB.</p>
 </div>
+</div>
 <div id="evolution-of-leb-over-time" class="section level1">
 <h1>Evolution of LEB over time</h1>
 <p>To get a better sense for the rate of improvement in LEB, let us select a few representative milestones and compare their LEB distributions accross countries. We will focus on years 1950, 1970, 1990, 2010 and 2016.</p>
@@ -287,9 +291,8 @@ le_decades_fct$year &lt;- as.factor(sub('X', '', le_decades$year))</code></pre>
 <li>A few outliers appeared in 2010 at the lower end of the distribution and the 1st quartile’s range became much wider than the 4th quartile’s, indicating a shift towards negative skewness.</li>
 </ul>
 </div>
-</div>
-<div id="evolution-by-country-wealth" class="section level1">
-<h1>Evolution by Country Wealth</h1>
+<div id="evolution-by-country-wealth" class="section level2">
+<h2>Evolution by Country Wealth</h2>
 <p>The shift from a bimodal distribution to unimodal with negative skewness might be hint to the fact that there were well-defined groups of countries (in terms of life expectancy) that progressively merged while improving. Typically, poor countries will tend to have lower life expectancy (<a href="http://www.gapminder.org/world/#$majorMode=chart$is;shi=t;ly=2003;lb=f;il=t;fs=11;al=30;stl=t;st=t;nsl=t;se=t$wst;tts=C$ts;sp=5.59290322580644;ti=2013$zpv;v=0$inc_x;mmid=XCOORDS;iid=phAwcNAVuyj1jiMAkmq1iMg;by=ind$inc_y;mmid=YCOORDS;iid=phAwcNAVuyj2tPLxKvvnNPA;by=ind$inc_s;uniValue=8.21;iid=phAwcNAVuyj0XOoBL_n5tAQ;by=ind$inc_c;uniValue=255;gid=CATID0;by=grp$map_x;scale=log;dataMin=194;dataMax=96846$map_y;scale=lin;dataMin=23;dataMax=86$map_s;sma=49;smi=2.65$cd;bd=0$inds=;modified=60">see here for an illustration of this</a>), so we are interested in comparing the rate of improvement for different groups of countries defined by their GDP per capita. The suspicion is that poor countries improved their LEB faster than rich ones, and that this catching up explains the previous observations.</p>
 <p>For a full analysis of potential correlations, we would need to join the LEB data with GDP data but in this exploratory analysis, we just want to get a feel for the correctness of our assumption. We will therefore select only a few countries in each group.</p>
 <p><em>Note:</em> The countries are classified according to their GDP per capita as of 2015.</p>
@@ -352,8 +355,8 @@ grid.arrange(p1, p2, p3, p4, ncol = 2)</code></pre>
 <p>These plots tend to confirm our assumption. IQRs are not very relevant with such small samples, but we can clearly see that medians improved significantly more for countries in the “Low GDP”, “Lower-Mid GDP” and “Upper-Mid” groups (about 26 to 27 years for each of them), than the “High GDP” group (about 13 years). Moreover, it seems that the richer the country, the slower the rate of change between 2010 and 2016.</p>
 <p>These trends make sense, as the law of diminishing returns would apply to life expectancy – it takes a lot more effort to get from 60 to 80 than to get from 40 to 60. However, they also indicate that health in developping countries have improved dramatically in the second half of the <span class="math inline">\(XX^{th}\)</span> century and they continue to improve.</p>
 </div>
-<div id="conclusions" class="section level1">
-<h1>Conclusions</h1>
+<div id="recap-observations-on-life-expectancy-at-birth" class="section level2">
+<h2>Recap: Observations on Life Expectancy at Birth</h2>
 <p>This exploratory analysis has given us some key insights into the data. We observed that the overall LEB has improved dramatically since 1950 for every single country in the world. This improvement has been faster between 1950 and 1990 than in subsequent years, but it is still increasing. More importantly, the improvement benefited poorer countries the most, which led to a much more compact distribution of LEB accross the world.</p>
 <p>A few additional ideas for analyses arise from this preliminary work:</p>
 <ul>
@@ -361,6 +364,26 @@ grid.arrange(p1, p2, p3, p4, ncol = 2)</code></pre>
 <li>Group coutries by continent,</li>
 <li>Look for outliers in the rate of change and see if historical events can explain them.</li>
 </ul>
+<hr />
+</div>
+</div>
+<div id="life-expectancy-vs-dtp3-immunization" class="section level1">
+<h1>2. Life Expectancy vs DTP3 Immunization</h1>
+<p>In this second part of the analysis, we introduce a second variable, the proportion of one-year-olds immunized with 3 doses of Diphteria-Tetanus-Pertussis (DTP3). This dataset contains observations since 1980 and is also provided by <a href="www.gapminder.org/data">Gapminder</a>.</p>
+<div id="questions-1" class="section level2">
+<h2>Questions:</h2>
+<p>We would like to answer the following questions:</p>
+<ul>
+<li>How did the immunization rate evolve overall and in specific countries in the last 36 years?</li>
+<li>Is there a correlation between the immunization rate and life expectancy at birth?</li>
+</ul>
+</div>
+<div id="data-load-1" class="section level2">
+<h2>Data Load</h2>
+<pre class="r"><code>dtp &lt;- read.csv('./one_year_old_dtp3_immunized.tsv', sep = '\t',
+                stringsAsFactors = FALSE)
+colnames(dtp)[1] &lt;- 'country'</code></pre>
+</div>
 </div>
 
 

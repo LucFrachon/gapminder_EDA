@@ -11,9 +11,11 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Introduction
 
-This study is a Problem Set of the "Data Analysis with R" course, part of Udacity's Data Analyst Nanodegree curriculum. In this study, we select datasets from Gapminder (www.gapminder.org/data) and perform exploratory analyses using different types of visualisations.  
+This study is a Problem Set of the "Data Analysis with R" course, part of Udacity's Data Analyst Nanodegree curriculum. In this study, we select datasets from [Gapminder](www.gapminder.org/data) and perform exploratory analyses using different types of visualisations.  
 
 For educational purposes, we make the code visible. The code is developped using R and the following libraries: tidyr, dplyr, ggplot2, gridExtra and RColorBrewer.
+
+-----
 
 # 1. Life Expectancy at Birth over Time
 
@@ -236,4 +238,27 @@ A few additional ideas for analyses arise from this preliminary work:
  * Conduct a more complete detailed of the rate of change vs. GDP per capita,
  * Group coutries by continent,
  * Look for outliers in the rate of change and see if historical events can explain them.
+
+-----
+
+# 2. Life Expectancy vs DTP3 Immunization
+
+In this second part of the analysis, we introduce a second variable, the proportion of one-year-olds immunized with 3 doses of Diphteria-Tetanus-Pertussis (DTP3). This dataset contains observations since 1980 and is also provided by [Gapminder](www.gapminder.org/data).
+
+## Questions:
+
+We would like to answer the following questions:
+
+ * How did the immunization rate evolve overall and in specific countries in the last 36 years?
+ * Is there a correlation between the immunization rate and life expectancy at birth?
+ 
+## Data Load
+
+```{r}
+dtp <- read.csv('./one_year_old_dtp3_immunized.tsv', sep = '\t',
+                stringsAsFactors = FALSE)
+colnames(dtp)[1] <- 'country'
+```
+
+
 
