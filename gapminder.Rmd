@@ -103,7 +103,7 @@ Let us see if any countries have seen their LEB decrease:
 
 ```{r}
 le_decrease <- filter(le, X2016 < X1950)
-print(le_decrease)
+nrow(le_decrease)
 ```
 
 Every single country has had improvements to their LEB.
@@ -258,7 +258,99 @@ We would like to answer the following questions:
 dtp <- read.csv('./one_year_old_dtp3_immunized.tsv', sep = '\t',
                 stringsAsFactors = FALSE)
 colnames(dtp)[1] <- 'country'
+dim(dtp)
 ```
 
+The data contains 270 countries over 32 years (from 1980 to 2011). Note that the LEB dataset previously explored had only 260 countries but spanned a much longer period. To compare the two, we will need to abandon some of the data.
 
+## Evolution of DTP3 Immunization over time
+
+We first need to convert the dataset into a long format:
+
+```{r}
+dtp_long <- gather(dtp, key = year, value = pct_immunized, 
+                   -country, convert = TRUE)
+dtp_long$year <- as.factor(sub('X', '', dtp_long$year))
+```
+
+Let's build the same frequency polygon plot as with the previous dataset, selecting a few years:
+
+```{r}
+ggplot(aes(x = pct_immunized), data = subset(dtp_long, year %in% c('1981', '1991', '2001', '2011'))) +
+    theme_dark() +
+    geom_freqpoly(aes(color = year), binwidth = 5, size = 1) +
+    scale_color_brewer(type = 'seq', palette = 'Blues') +
+    scale_x_continuous(limits = c(0, 100))
+```
+
+While in 1981, the distribution of countries was very uniform, by 1991 it was already starting to display a significant peak between 80 and 100%. This trend continued in the next 20 years until the distribution looked heavily negatively skewed, with a left-tail comprising of a only a few countries.
+
+```{r}
+
+decades <- as.character(seq(1981, 2011, 2))
+ggplot(aes(x = year, y = pct_immunized), 
+       data = subset(dtp_long, year %in% decades)) +
+    theme_dark() +
+    geom_boxplot(fill = "lightsteelblue") + 
+    ggtitle("Percentage of 1-year-old immunized with DTP3")
+```
+
+Indeed, these boxplots confirm the massive increase in immunization and the equally critical reduction of the distribution's dispersion.
+
+Finally, let's re-use the country groups created in Part 1 to compare how DTP3 Immunization progressed between countries of different wealth.
+
+```{r fig.height=8, fig.width=7}
+dtp_select <- subset(dtp_long, 
+                        country %in% c(poor, mid_lower, mid_upper, rich))
+dtp_select$country_group <- NA
+dtp_select[dtp_select$country %in% poor, 
+              "country_group"] <- "poor"
+dtp_select[dtp_select$country %in% mid_lower, 
+              "country_group"] <- "mid_lower"
+dtp_select[dtp_select$country %in% mid_upper, 
+              "country_group"] <- "mid_upper"
+dtp_select[dtp_select$country %in% rich, 
+              "country_group"] <- "rich"
+
+# Build boxplots:
+p1 <- ggplot(aes(x = year, y = pct_immunized), 
+             data = subset(dtp_select, 
+                           year %in% decades & country_group == "poor")) +
+      theme_dark() +
+      geom_boxplot(fill = 'lightsteelblue') +
+      coord_cartesian(ylim = c(0, 100)) +
+      ggtitle("Low GDP per Capita") +
+      xlab("Year") + ylab("% immunized with DTP3")
+
+p2 <- ggplot(aes(x = year, y = pct_immunized), 
+      data = subset(dtp_select, 
+                    year %in% decades & country_group == "mid_lower")) +
+      theme_dark() +
+      geom_boxplot(fill = 'lightsteelblue') +
+      coord_cartesian(ylim = c(0, 100)) +
+      ggtitle("Lower-Mid GDP per Capita") +
+      xlab("Year") + ylab("% immunized with DTP3")
+      
+p3 <- ggplot(aes(x = year, y = pct_immunized), 
+      data = subset(dtp_select, 
+                    year %in% decades & country_group == "mid_upper")) +
+      theme_dark() +
+      geom_boxplot(fill = 'lightsteelblue') +
+      coord_cartesian(ylim = c(0, 100)) +
+      ggtitle("Upper-Mid GDP per Capita") +
+      xlab("Year") + ylab("% immunized with DTP3")
+
+p4 <- ggplot(aes(x = year, y = pct_immunized), 
+      data = subset(dtp_select, 
+                    year %in% decades & country_group == "rich")) +
+      theme_dark() +
+      geom_boxplot(fill = 'lightsteelblue') +
+      coord_cartesian(ylim = c(0, 100)) +
+      ggtitle("High GDP per Capita") +
+      xlab("Year") + ylab("% immunized with DTP3")
+
+grid.arrange(p1, p2, p3, p4, ncol = 2)
+```
+
+As with Life Expectancy at Birth, the biggest gains happened in the poorer countries. The lowest group however is still far from the levels reached by the other countries and still has more dispersion.
 
