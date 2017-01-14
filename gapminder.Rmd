@@ -11,11 +11,13 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Introduction
 
-This study is an exercise of Problem Set 1 in the "Exploratory Data Analysis with R" course, part of Udacity's Data Analyst Nanodegree curriculum. In this study, we select a dataset from Gapminder (www.gapminder.org/data) and perform a short analysis using different types of visualisations.  
+This study is a Problem Set of the "Data Analysis with R" course, part of Udacity's Data Analyst Nanodegree curriculum. In this study, we select datasets from Gapminder (www.gapminder.org/data) and perform exploratory analyses using different types of visualisations.  
 
 For educational purposes, we make the code visible. The code is developped using R and the following libraries: tidyr, dplyr, ggplot2, gridExtra and RColorBrewer.
 
-# Questions
+# 1. Life Expectancy at Birth over Time
+
+## Questions
 
 The questions we would like to answer are the following:
  
@@ -23,7 +25,7 @@ The questions we would like to answer are the following:
  * What are the periods where it has changed the most?
  * How did the evolution of LEB compare between countries of different wealth?
 
-# Data Load
+## Data Load
 
 We select the Life Expectancy At Birth dataset. We download the file, save it as a .tsv ("tabulation-separated values") and load it into R:
 
@@ -59,7 +61,7 @@ le[1:5, 1:5]
 
 The data contains 260 countries and covers 67 years (+ the "country" column).
 
-# LEB distribution in 1950 vs. 2016
+## LEB distribution in 1950 vs. 2016
 
 Let's look at some summary statistics and plot the data distribution for 1950 and 2016 (first and latest year in the sample):
 ```{r}
@@ -153,7 +155,7 @@ We have confirmation of the previous observations:
  * A few outliers appeared in 2010 at the lower end of the distribution and the 1st quartile's range became much wider than the 4th quartile's, indicating a shift towards negative skewness.
  
  
-# Evolution by Country Wealth
+## Evolution by Country Wealth
 
 The shift from a bimodal distribution to unimodal with negative skewness might be hint to the fact that there were well-defined groups of countries (in terms of life expectancy) that progressively merged while improving. Typically, poor countries will tend to have lower life expectancy ([see here for an illustration of this](http://www.gapminder.org/world/#$majorMode=chart$is;shi=t;ly=2003;lb=f;il=t;fs=11;al=30;stl=t;st=t;nsl=t;se=t$wst;tts=C$ts;sp=5.59290322580644;ti=2013$zpv;v=0$inc_x;mmid=XCOORDS;iid=phAwcNAVuyj1jiMAkmq1iMg;by=ind$inc_y;mmid=YCOORDS;iid=phAwcNAVuyj2tPLxKvvnNPA;by=ind$inc_s;uniValue=8.21;iid=phAwcNAVuyj0XOoBL_n5tAQ;by=ind$inc_c;uniValue=255;gid=CATID0;by=grp$map_x;scale=log;dataMin=194;dataMax=96846$map_y;scale=lin;dataMin=23;dataMax=86$map_s;sma=49;smi=2.65$cd;bd=0$inds=;modified=60)), so we are interested in comparing the rate of improvement for different groups of countries defined by their GDP per capita. The suspicion is that poor countries improved their LEB faster than rich ones, and that this catching up explains the previous observations.
 
@@ -225,7 +227,7 @@ These plots tend to confirm our assumption. IQRs are not very relevant with such
 
 These trends make sense, as the law of diminishing returns would apply to life expectancy -- it takes a lot more effort to get from 60 to 80 than to get from 40 to 60. However, they also indicate that health in developping countries have improved dramatically in the second half of the $XX^{th}$ century and they continue to improve.
 
-# Conclusions
+## Recap: Observations on Life Expectancy at Birth
 
 This exploratory analysis has given us some key insights into the data. We observed that the overall LEB has improved dramatically since 1950 for every single country in the world. This improvement has been faster between 1950 and 1990 than in subsequent years, but it is still increasing. More importantly, the improvement benefited poorer countries the most, which led to a much more compact distribution of LEB accross the world.
 
@@ -234,3 +236,4 @@ A few additional ideas for analyses arise from this preliminary work:
  * Conduct a more complete detailed of the rate of change vs. GDP per capita,
  * Group coutries by continent,
  * Look for outliers in the rate of change and see if historical events can explain them.
+
