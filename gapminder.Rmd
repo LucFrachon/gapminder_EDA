@@ -6,12 +6,12 @@ output: html_document
 ---
 
 ```{r setup, include=TRUE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 ```
 
 # Introduction
 
-This study is a Problem Set of the "Data Analysis with R" course, part of Udacity's Data Analyst Nanodegree curriculum. In this study, we select datasets from [Gapminder](www.gapminder.org/data) and perform exploratory analyses using different types of visualisations.  
+This study is a Problem Set of the "Data Analysis with R" course, part of Udacity's Data Analyst Nanodegree curriculum. In this study, we select two datasets from [Gapminder](www.gapminder.org/data) and perform exploratory analyses using different types of visualisations.  
 
 For educational purposes, we make the code visible. The code is developped using R and the following libraries: tidyr, dplyr, ggplot2, gridExtra and RColorBrewer.
 
@@ -31,7 +31,7 @@ The questions we would like to answer are the following:
 
 We select the Life Expectancy At Birth dataset. We download the file, save it as a .tsv ("tabulation-separated values") and load it into R:
 
-```{r cache = FALSE}
+```{r}
 require(tidyr)
 require(dplyr)
 require(ggplot2)
@@ -48,12 +48,10 @@ Now let's take a first look at the data:
 ```{r}
 colnames(le_full)[1] <- "country"
 le_full[1:5, 1:5]
-
 ```
 
 
-The data documentation specifies that data prior to 1950 is estimated from models using other data, and might thus be unreliable. We will therefore only use post-1950 data.
-Let us look at the data structure after this:
+The data documentation specifies that data prior to 1950 is estimated from models using other data, and might thus be unreliable. We will therefore only use post-1950 data:
 
 ```{r}
 le <- select(le_full, country, num_range("X", 1950:2016))
@@ -61,11 +59,11 @@ dim(le)
 le[1:5, 1:5]
 ```
 
-The data contains 260 countries and covers 67 years (+ the "country" column).
+The data contains 260 countries and covers 67 years (+ the "country" column). We note that there are NAs in the dataset.
 
 ## LEB distribution in 1950 vs. 2016
 
-Let's look at some summary statistics and plot the data distribution for 1950 and 2016 (first and latest year in the sample):
+To get a first idea of the data, we compute some summary statistics and plot the data distribution for 1950 and 2016 (first and latest year in the sample):
 ```{r}
 # Some summary statistics for 1950 and 2016:
 print("The World in 1950:")
@@ -97,24 +95,22 @@ ggsave('hist_1950_2016.png')
 These numbers and plots show that the modern world is a radically different place to 1950. The mean LBE moved from 49.3 to 72.6 years while the minimum LBE more than doubled from 23.5 to 48.9. At the same time, the standard deviation $\sigma$ decreased from 11.8 to 7.7, meaning that not only people live longer on average, but there is also less dissimilarities between countries.
 
 These trends are obvious from the histograms. The whole plot shifted to the right between 1950 and 2016. The data from 1950 is more spread out and is somewhat bi-modal, hinting at well-separated groups of countries. It exhibits almost no skewness.  
-In contrast, the 2016 data is unimodal, less spread out and negatively skewed (the left tail is longer than the right tail). In other words, the majority of countries are above the average -- an observation confirmed by the fact that median > mean.
+In contrast, the 2016 data is closer to unimodal, less spread out and negatively skewed (the left tail is longer than the right tail). In other words, the majority of countries are above the average -- an observation confirmed by the fact that median > mean.
 
-Let us see if any countries have seen their LEB decrease:
+Moreover, every single country has improvemed their LEB:
 
 ```{r}
 le_decrease <- filter(le, X2016 < X1950)
 nrow(le_decrease)
 ```
 
-Every single country has had improvements to their LEB.
-
 # Evolution of LEB over time
 
-To get a better sense for the rate of improvement in LEB, let us select a few representative milestones and compare their LEB distributions accross countries. We will focus on years 1950, 1970, 1990, 2010 and 2016.
+To get a better sense for the rate of improvement in LEB, we want to compare LEB distributions accross countries at a few regularly spaced dates. We will focus on years 1956 to 2016 by 15-year increments.
 
 ## Frequency Polygons
 
-We plot the distribution for each of the selected years using frequency polygons, which allow us to represent several data vectors on the same plot.
+We plot the distribution for each of the selected years using frequency polygons, which allow us to represent several data series on the same plot.
 
 
 ```{r}
@@ -135,9 +131,9 @@ ggplot(aes(x = life_exp), data = le_fifteen) +
 ggsave('freqpoly_1950-2016_by_decade.png')
 ```
 
-It would appear that the biggest changes happened in the earlier years of the dataset (up to 1986), with the distribution's shape shifting from bimodal to unimodal and negative skeweness. The rate of change seems comparatively slower in the years after that
+It would appear that the biggest changes happened in the earlier years of the dataset (up to 1986), with the distribution's shape shifting from bimodal to unimodal and negative skeweness. The rate of change seems comparatively slower in the years after that.
 
-Let's look at some boxplots for a more quantitative view:
+Boxplots will allow a more quantitative view:
 
 
 ```{r}
@@ -150,7 +146,7 @@ ggplot(aes(x = year, y = life_exp), data = le_five) +
 ggsave('box_1950-2016_by_decade.png')
 ```
 
- * As noted before, the largest improvements in median values happened between approximately 1950 and 1980,
+ * As noted before, the largest improvements in median values happened between 1950 and 1980 approximately,
  * The growth seemed to slow down the the late 80's / early 90's, then bounced back especially in the early 2000's,
  * The interquartile range (IQR -- spread of the middle 50% of the countries) decreased most significantly from 1971 to 1986,
  * The median progressively shifted towards the upper bound of the IQR, confirming a shift towards negative skewness
@@ -165,7 +161,7 @@ For a full analysis of potential correlations, we would need to join the LEB dat
 
 *Note:* The countries are classified according to their GDP per capita as of 2015.
 
-With the defined groups, we can then build boxplots for each, similar to the work done above.
+With the defined groups, we can then make boxplots for each, similar to the work done above.
 
 
 ```{r fig.height=8, fig.width=7}
@@ -231,11 +227,11 @@ ggsave('box_1950-2016_by_decade_by_group.png')
 
 These plots tend to confirm our assumption. IQRs are not very relevant with such small samples, but we can clearly see that medians improved significantly more for countries in the "Low GDP", "Lower-Mid GDP" and "Upper-Mid" groups (by about 25 to 27 years for each of them), than the "High GDP" group (about 14 years). Moreover, it seems that the richer the country, the slower the rate of change between 2010 and 2016.
 
-These trends make sense, as the law of diminishing returns would apply to life expectancy -- it takes a lot more effort to get from 60 to 80 than to get from 40 to 60. However, they also indicate that health in developping countries have improved dramatically in the second half of the $XX^{th}$ century and they continue to improve.
+These trends make sense, as the law of diminishing returns would apply to life expectancy -- it takes a lot more effort to get from 60 to 80 than to get from 40 to 60. However, they also indicate that health in developping countries has improved dramatically in the second half of the XX$^{th}$ century and continues to do so.
 
 ## Recap: Observations on Life Expectancy at Birth
 
-This exploratory analysis has given us some key insights into the data. We observed that the overall LEB has improved dramatically since 1950 for every single country in the world. This improvement has been faster between 1950 and 1990 than in subsequent years, but it is still increasing. More importantly, the improvement benefited poorer countries the most, which led to a much more compact distribution of LEB accross the world.
+This exploratory analysis has given us some key insights into the data. We observed that the overall LEB has improved dramatically since 1950 for every single country in the world. This improvement has been faster between 1950 and 1990 than in subsequent years, but it is still happening. Moreover, the improvement benefited poorer countries the most, which led to a much more compact distribution of LEB accross the world.
 
 A few additional ideas for analyses arise from this preliminary work:
 
@@ -254,7 +250,7 @@ In this second part of the analysis, we introduce a second variable, the proport
 We would like to answer the following questions:
 
  * How did the immunization rate evolve overall and in specific countries in the last 36 years?
- * Is there a correlation between the immunization rate and life expectancy at birth?
+ * Is there a correlation between the immunization rate and life expectancy at birth? What are the key relationships between these two variables?
  
 ## Data Load
 
@@ -277,7 +273,7 @@ dtp_long <- gather(dtp, key = year, value = pct_immunized,
 dtp_long$year <- as.factor(sub('X', '', dtp_long$year))
 ```
 
-Let's build the same frequency polygon plot as with the previous dataset, selecting a few years:
+We then build the same frequency polygon plot as with the previous dataset, selecting a few years:
 
 ```{r}
 ggplot(aes(x = pct_immunized), data = subset(dtp_long, year %in% c('1981', '1991', '2001', '2011'))) +
@@ -287,7 +283,7 @@ ggplot(aes(x = pct_immunized), data = subset(dtp_long, year %in% c('1981', '1991
     scale_x_continuous(limits = c(0, 100))
 ```
 
-While in 1981, the distribution of countries was very uniform, by 1991 it was already starting to display a significant peak between 80 and 100%. This trend continued in the next 20 years until the distribution looked heavily negatively skewed, with a left-tail comprising of a only a few countries.
+While in 1981, the distribution of countries was very uniform, by 1991 it was already starting to display a significant peak between 80 and 100%. This trend continued in the next 20 years until the distribution looked heavily negatively skewed, with a left-tail comprising of a only a few countries. This is similar to what we witnessed with LEB, but here the phenomenon seems even more accute.
 
 ```{r}
 
@@ -302,9 +298,9 @@ ggplot(aes(x = year, y = pct_immunized),
 
 
 
-Indeed, these boxplots confirm the massive increase in immunization and the equally critical reduction of the distribution's dispersion.
+Indeed, these boxplots confirm a critical increase in immunization and the equally considerable reduction of the distribution's dispersion.
 
-Finally, let's re-use the country groups created in Part 1 to compare how DTP3 Immunization progressed between countries of different wealth.
+Finally, we re-use the country groups created in Part 1 to compare how DTP3 Immunization progressed between countries of different wealth.
 
 ```{r fig.height=8, fig.width=7}
 dtp_select <- subset(dtp_long, 
@@ -359,7 +355,7 @@ p4 <- ggplot(aes(x = year, y = pct_immunized),
 grid.arrange(p1, p2, p3, p4, ncol = 2)
 ```
 
-As with Life Expectancy at Birth, the biggest gains happened in the poorer countries. The lowest group however is still far from the levels reached by the other countries and still has more dispersion.
+As with Life Expectancy at Birth, the biggest gains happened in the poorer countries. The lowest group however is still far from the levels reached by the other countries and still has more variance.
 
 ## Life Expectancy at Birth vs. DTP3 Immunization of 1-year-olds
 
@@ -375,16 +371,16 @@ le_dtp$year <- as.numeric(le_dtp$year)
 
 ```
 
-We can now build a scatterplot including all countries x year combinations, with a linear smoother. We use horizontal jittering to reduce overplotting because percentages on the x-axis are expressed as integers which tends to create "stripes":
+We can now build a scatterplot including all ```country x year``` combinations. We use horizontal jittering to reduce overplotting because percentages on the x-axis are expressed as integers, which tends to create "stripes":
 
 ```{r}
 ggplot(data = le_dtp, aes(x = pct_immunized, y = life_exp)) +
-    geom_jitter(colour = 'lightsteelblue', alpha = '0.1', height = 0, width = .4) +
-    geom_smooth(formula = y ~ x, method = 'lm') +
+    geom_jitter(colour = 'lightsteelblue', alpha = '0.16', height = 0, width = .4) +
     theme_dark() +
     coord_cartesian(ylim = c(30, 90))
 ```
 
+Here, each observation or dot on the plot is a combination of a country and a year.
 There seems to be a relatively linear correlation between LEB and DTP3 Immunization. 
 
 ```{r}
@@ -393,7 +389,7 @@ cor.test(le_dtp$pct_immunized, le_dtp$life_exp, )
 
 This confirms that there is a moderate to strong positive correlation.
 
-To improve the plot and give it a sense of progression over time, we can group observations by 5-year periods. We can also add the mean (blue), median (white, solid) and .1 and .9 quantiles (white, dashed) for LEB as a function of Immunization:
+To improve the plot and give it a sense of progression over time, we can group observations by 5-year periods. We can also add the linear regression line (brown), the mean (blue), the median (white, solid) and the .1 and .9 quantiles (white, dashed) for LEB as a function of Immunization:
 
 ```{r}
 le_dtp$period <- NA
@@ -407,7 +403,8 @@ le_dtp$period[le_dtp$year >= 2010] <- "2010-2011"
 
 ggplot(data = le_dtp, aes(x = pct_immunized, y = life_exp)) +
     scale_colour_brewer(type = 'div', palette = 'Spectral') +
-    geom_jitter(aes(colour = period), alpha = '0.2', height = 0, width = .4) +
+    geom_jitter(aes(colour = period), alpha = '0.15', height = 0, width = .4) +
+    geom_smooth(formula = y ~ x, method = 'lm', colour = 'brown') +
     geom_line(stat = 'summary', fun.y = "mean", 
               fun.args = list(na.rm = TRUE),
               color = 'blue') +
@@ -426,20 +423,22 @@ ggplot(data = le_dtp, aes(x = pct_immunized, y = life_exp)) +
 ```
 
 We notice that as observed in previous plots, observations corresponding to more recent periods are bunched up near the top-right corner of the plot (higher immunization and higher life expectancy) whereas older periods are further to the left.
-Moreover, the .1-.9 quantile range tends to narrow down as we progress towards the higher values of immunization, although this could be an artefact of the higher observation count in that region of the plot.
-We can also remark that the mean and median lines remain close to each other for the most part, except over 80% immunization where the LEB median becomes consistently higher by a few years than the mean. 
+Moreover, the 0.1-0.9 quantile range tends to narrow down as we progress towards the higher values of immunization, although this could be an effect of the higher observation count in that region of the plot.
+We can also remark that the mean and median lines remain intertwined for the most part, except over 80% immunization where the LEB median becomes consistently higher than the mean by a few years. 
 
-From all the observations aboves, we can conclude that a high immunization ratio is associated with:
+From all the observations above, we can conclude that a high immunization ratio is associated with:
  - Higher life expectancy,
- - Smaller variance in life expectancy between countries,
- - A slightly negative skewness that means that a minority of countries/year pairs are lowering the mean by significantly lower LEB values, but the majority is actually above the mean.
+ - Smaller variance in life expectancy between observations,
+ - A slightly negative skewness that means that a minority of countries/year pairs are lowering the mean by significantly lower LEB values, but the majority is actually above the mean. We can clearly see a number of outliers in the lower-right part of the plot (between 80% and 100% immunization and 40 to 55 years old, approximately).
 
 ## Recap: Observations on Immunization vs. Life Expectancy
 
 In this part of the analysis, we made the following observations:
 
- - The DTP3 Immunization percentage among 1-year-old has followed a similar pattern to Life Expectancy at Birth: A rapid progress since 1980, a reduction in the variance accross countries and poorer countries catching up with rich ones,
- - There is a fairly robust and positive correlation (over .6) between Immunization and Life Expectancy,
- - Where and when immunization is high, we tend to have the majority of observations above the LEB average. Although a few outliers tend to pull the mean down, this is a better situation than the opposite. These outliers could be due to one-off events (such a natural disasters, wars, epidemics) which, although tragic, are unlikly to occur on a regular basis.
+ - The DTP3 Immunization percentage among 1-year-old followed a similar pattern to Life Expectancy at Birth: A rapid progress since 1980, a reduction in the variance accross countries and poorer countries catching up with rich ones,
+ - There is a robust positive correlation (over .6) between Immunization and Life Expectancy,
+ - Where and when immunization is high, we tend to have the majority of observations above the LEB average. Although a few outliers tend to pull the mean down, this is a better situation than the opposite. These outliers could be due to one-off events (such a natural disasters, wars, epidemics) which, although tragic, are unlikely to occur on a regular basis.
 
-Overall this analysis shows just how much public health has improved since the middle of the 1950. Life Expectancy at Birth and DTP3 Immunization Ratio among 1-year-olds are just two metrics. The correlation between them is clear and could probably be found also with other social metrics such as litteracy. Together, they paint a rather promising picture for the world's future.
+# Conclusion
+
+Overall this analysis shows just how much public health has improved since the middle of the 1950, especially in poorer countries. Life Expectancy at Birth and DTP3 Immunization Ratio among 1-year-olds are just two metrics. The correlation between them is clear and could probably be found also with other social metrics such as litteracy. Together, they paint a rather promising picture for the world's future.
