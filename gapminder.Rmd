@@ -291,13 +291,16 @@ While in 1981, the distribution of countries was very uniform, by 1991 it was al
 
 ```{r}
 
-decades <- as.character(seq(1981, 2011, 2))
+two_y <- as.character(seq(1981, 2011, 2))
 ggplot(aes(x = year, y = pct_immunized), 
-       data = subset(dtp_long, year %in% decades)) +
+       data = subset(dtp_long, year %in% two_y)) +
     theme_dark() +
     geom_boxplot(fill = "lightsteelblue") + 
     ggtitle("Percentage of 1-year-old immunized with DTP3")
 ```
+
+
+
 
 Indeed, these boxplots confirm the massive increase in immunization and the equally critical reduction of the distribution's dispersion.
 
@@ -365,11 +368,79 @@ In this section, we will explore possible correlations between Life Expectancy a
 We first have to join the two datasets. As we already noticed that the LEB dataset had less countries but more years that the DTP3 dataset, we will need to subset it for the same time span and then perform a left join.
 ```{r}
 period <- as.character(seq(1980, 2011))
-le_dtp <- le %>% 
+le_dtp <- le_long %>% 
     filter(year %in% period) %>%
     left_join(dtp_long, by = c("country", "year"))
-
+le_dtp$year <- as.numeric(le_dtp$year)
 
 ```
 
+We can now build a scatterplot including all countries x year combinations, with a linear smoother. We use horizontal jittering to reduce overplotting because percentages on the x-axis are expressed as integers which tends to create "stripes":
+
+```{r}
+ggplot(data = le_dtp, aes(x = pct_immunized, y = life_exp)) +
+    geom_jitter(colour = 'lightsteelblue', alpha = '0.1', height = 0, width = .4) +
+    geom_smooth(formula = y ~ x, method = 'lm') +
+    theme_dark() +
+    coord_cartesian(ylim = c(30, 90))
+```
+
+There seems to be a relatively linear correlation between LEB and DTP3 Immunization. 
+
+```{r}
+cor.test(le_dtp$pct_immunized, le_dtp$life_exp, )
+```
+
+This confirms that there is a moderate to strong positive correlation.
+
+To improve the plot and give it a sense of progression over time, we can group observations by 5-year periods. We can also add the mean (blue), median (white, solid) and .1 and .9 quantiles (white, dashed) for LEB as a function of Immunization:
+
+```{r}
+le_dtp$period <- NA
+le_dtp$period[le_dtp$year < 1985] <- "1981-1984"
+le_dtp$period[le_dtp$year >= 1985 & le_dtp$year < 1990] <- "1985-1989"
+le_dtp$period[le_dtp$year >= 1990 & le_dtp$year < 1995] <- "1990-1994"
+le_dtp$period[le_dtp$year >= 1995 & le_dtp$year < 2000] <- "1995-1999"
+le_dtp$period[le_dtp$year >= 2000 & le_dtp$year < 2004] <- "2000-2004"
+le_dtp$period[le_dtp$year >= 2005 & le_dtp$year < 2009] <- "2005-2009"
+le_dtp$period[le_dtp$year >= 2010] <- "2010-2011"
+
+ggplot(data = le_dtp, aes(x = pct_immunized, y = life_exp)) +
+    scale_colour_brewer(type = 'div', palette = 'Spectral') +
+    geom_jitter(aes(colour = period), alpha = '0.2', height = 0, width = .4) +
+    geom_line(stat = 'summary', fun.y = "mean", 
+              fun.args = list(na.rm = TRUE),
+              color = 'blue') +
+    geom_line(stat = 'summary', fun.y = "quantile", 
+              fun.args = list(na.rm = TRUE, prob = .1),
+              linetype = 2, color = 'white') +
+    geom_line(stat = 'summary', fun.y = "quantile", 
+              fun.args = list(na.rm = TRUE, prob = .5),
+              color = 'white') +
+    geom_line(stat = 'summary', fun.y = "quantile", 
+              fun.args = list(na.rm = TRUE, prob = .9),
+              linetype = 2, color = 'white') +
+    theme_dark() +
+    coord_cartesian(ylim = c(30, 90))
+    
+```
+
+We notice that as observed in previous plots, observations corresponding to more recent periods are bunched up near the top-right corner of the plot (higher immunization and higher life expectancy) whereas older periods are further to the left.
+Moreover, the .1-.9 quantile range tends to narrow down as we progress towards the higher values of immunization, although this could be an artefact of the higher observation count in that region of the plot.
+We can also remark that the mean and median lines remain close to each other for the most part, except over 80% immunization where the LEB median becomes consistently higher by a few years than the mean. 
+
+From all the observations aboves, we can conclude that a high immunization ratio is associated with:
+ - Higher life expectancy,
+ - Smaller variance in life expectancy between countries,
+ - A slightly negative skewness that means that a minority of countries/year pairs are lowering the mean by significantly lower LEB values, but the majority is actually above the mean.
+
+## Recap: Observations on Immunization vs. Life Expectancy
+
+In this part of the analysis, we made the following observations:
+
+ - The DTP3 Immunization percentage among 1-year-old has followed a similar pattern to Life Expectancy at Birth: A rapid progress since 1980, a reduction in the variance accross countries and poorer countries catching up with rich ones,
+ - There is a fairly robust and positive correlation (over .6) between Immunization and Life Expectancy,
+ - Where and when immunization is high, we tend to have the majority of observations above the LEB average. Although a few outliers tend to pull the mean down, this is a better situation than the opposite. These outliers could be due to one-off events (such a natural disasters, wars, epidemics) which, although tragic, are unlikly to occur on a regular basis.
+
+Overall this analysis shows just how much public health has improved since the middle of the 1950. Life Expectancy at Birth and DTP3 Immunization Ratio among 1-year-olds are just two metrics. The correlation between them is clear and could probably be found also with other social metrics such as litteracy. Together, they paint a rather promising picture for the world's future.
 
