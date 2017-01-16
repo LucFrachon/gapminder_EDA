@@ -118,43 +118,43 @@ We plot the distribution for each of the selected years using frequency polygons
 
 
 ```{r}
-le_decades_wide <- le[ , c(1, seq(2, 68, 20), 68)]
-le_decades <- le_decades_wide %>% 
-    gather(key = year, value = life_exp, 
-           -country, convert = TRUE)
+# Convert data to long format:
+le_long <- gather(le, key = year, value = life_exp, -country, convert = TRUE)
+le_long$year <- as.factor(sub('X', '', le_long$year))
 
-le_decades$year <- sub('X', '', le_decades$year)
-le_decades_fct <- le_decades
-le_decades_fct$year <- as.factor(sub('X', '', le_decades$year))
+# Subset 15-year periods:
+fifteen_y <- as.character(seq(1956, 2016, 15))
+le_fifteen <- filter(le_long, year %in% fifteen_y)
 ```
 
 ```{r}
-ggplot(aes(x = life_exp), data = le_decades) +
+ggplot(aes(x = life_exp), data = le_fifteen) +
     theme_dark() +
     geom_freqpoly(aes(color = year), binwidth = 5, size = 1) +
     scale_color_brewer(type = 'seq', palette = 'Blues')
 ggsave('freqpoly_1950-2016_by_decade.png')
 ```
 
-It would appear that the biggest changes happened from 1950 to 1990, with a comparatively slower rate of change in the years after that (keeping in mind that the gap between the last two observations is only 6 years, compared to 20-year gaps before that). The distribution's shape shifted from bimodal to unimodal and negative skeweness between 1950 and 1970.
+It would appear that the biggest changes happened in the earlier years of the dataset (up to 1986), with the distribution's shape shifting from bimodal to unimodal and negative skeweness. The rate of change seems comparatively slower in the years after that
 
 Let's look at some boxplots for a more quantitative view:
 
 
 ```{r}
-ggplot(aes(x = year, y = life_exp), data = le_decades_fct) +
+five_y <- as.character(seq(1951, 2016, 5))
+le_five <- filter(le_long, year %in% five_y)
+ggplot(aes(x = year, y = life_exp), data = le_five) +
     theme_dark() +
     geom_boxplot(fill = "lightsteelblue") + 
     ggtitle("Life Expectancy Worldwide, 1950-2016")
 ggsave('box_1950-2016_by_decade.png')
 ```
 
-We have confirmation of the previous observations: 
-
- * The largest improvements in median values happened between 1950 and 1970, then from 1970 to 1990,
- * The interquartile range (IQR -- spread of the middle 50% of the countries) decreased most significantly from 1970 to 1990,
- * The median progressively shifted towards the upper bound of the IQR
- * A few outliers appeared in 2010 at the lower end of the distribution and the 1st quartile's range became much wider than the 4th quartile's, indicating a shift towards negative skewness.
+ * As noted before, the largest improvements in median values happened between approximately 1950 and 1980,
+ * The growth seemed to slow down the the late 80's / early 90's, then bounced back especially in the early 2000's,
+ * The interquartile range (IQR -- spread of the middle 50% of the countries) decreased most significantly from 1971 to 1986,
+ * The median progressively shifted towards the upper bound of the IQR, confirming a shift towards negative skewness
+ * A few outliers appeared aound 2006 at the lower end of the distribution.
  
  
 ## Evolution by Country Wealth
@@ -176,56 +176,60 @@ mid_lower <- c("Bangladesh", "Kenya", "Cameroon", "India")
 mid_upper <- c("Indonesia", "China", "Brazil", "Russia")
 rich <- c("United States", "Japan", "Switzerland", "United Kingdom")
 
-le_dec_select <- subset(le_decades, 
+le_5_select <- subset(le_five, 
                         country %in% c(poor, mid_lower, mid_upper, rich))
-le_dec_select$country_group <- NA
-le_dec_select[le_dec_select$country %in% poor, 
+le_5_select$country_group <- NA
+le_5_select[le_5_select$country %in% poor, 
               "country_group"] <- "poor"
-le_dec_select[le_dec_select$country %in% mid_lower, 
+le_5_select[le_5_select$country %in% mid_lower, 
               "country_group"] <- "mid_lower"
-le_dec_select[le_dec_select$country %in% mid_upper, 
+le_5_select[le_5_select$country %in% mid_upper, 
               "country_group"] <- "mid_upper"
-le_dec_select[le_dec_select$country %in% rich, 
+le_5_select[le_5_select$country %in% rich, 
               "country_group"] <- "rich"
 
 # Build boxplots:
 p1 <- ggplot(aes(x = as.factor(year), y = life_exp), 
-             data = subset(le_dec_select, country_group == "poor")) +
+             data = subset(le_5_select, country_group == "poor")) +
       theme_dark() +
       geom_boxplot(fill = 'lightsteelblue') +
       coord_cartesian(ylim = c(30, 85)) +
       ggtitle("Low GDP per Capita") +
-      xlab("Year") + ylab("Life Expectancy at Birth")
+      xlab("Year") + ylab("Life Expectancy at Birth") +
+      theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 p2 <- ggplot(aes(x = as.factor(year), y = life_exp), 
-      data = subset(le_dec_select, country_group == "mid_lower")) +
+      data = subset(le_5_select, country_group == "mid_lower")) +
       theme_dark() +
       geom_boxplot(fill = 'lightsteelblue') +
       coord_cartesian(ylim = c(30, 85)) +
       ggtitle("Lower-Mid GDP per Capita") +
-      xlab("Year") + ylab("Life Expectancy at Birth")
+      xlab("Year") + ylab("Life Expectancy at Birth") +
+      theme(axis.text.x = element_text(angle = 90, hjust = 1))
       
 p3 <- ggplot(aes(x = as.factor(year), y = life_exp), 
-      data = subset(le_dec_select, country_group == "mid_upper")) +
+      data = subset(le_5_select, country_group == "mid_upper")) +
       theme_dark() +
       geom_boxplot(fill = 'lightsteelblue') +
       coord_cartesian(ylim = c(30, 85)) +
       ggtitle("Upper-Mid GDP per Capita") +
-      xlab("Year") + ylab("Life Expectancy at Birth")
+      xlab("Year") + ylab("Life Expectancy at Birth") +
+      theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 p4 <- ggplot(aes(x = as.factor(year), y = life_exp), 
-      data = subset(le_dec_select, country_group == "rich")) +
+      data = subset(le_5_select, country_group == "rich")) +
       theme_dark() +
       geom_boxplot(fill = 'lightsteelblue') +
       coord_cartesian(ylim = c(30, 85)) +
       ggtitle("High GDP per Capita") +
-      xlab("Year") + ylab("Life Expectancy at Birth")
+      xlab("Year") + ylab("Life Expectancy at Birth") + 
+      theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 grid.arrange(p1, p2, p3, p4, ncol = 2)
 ggsave('box_1950-2016_by_decade_by_group.png')
 ```
 
-These plots tend to confirm our assumption. IQRs are not very relevant with such small samples, but we can clearly see that medians improved significantly more for countries in the "Low GDP", "Lower-Mid GDP" and "Upper-Mid" groups (about 26 to 27 years for each of them), than the "High GDP" group (about 13 years). Moreover, it seems that the richer the country, the slower the rate of change between 2010 and 2016.
+These plots tend to confirm our assumption. IQRs are not very relevant with such small samples, but we can clearly see that medians improved significantly more for countries in the "Low GDP", "Lower-Mid GDP" and "Upper-Mid" groups (by about 25 to 27 years for each of them), than the "High GDP" group (about 14 years). Moreover, it seems that the richer the country, the slower the rate of change between 2010 and 2016.
 
 These trends make sense, as the law of diminishing returns would apply to life expectancy -- it takes a lot more effort to get from 60 to 80 than to get from 40 to 60. However, they also indicate that health in developping countries have improved dramatically in the second half of the $XX^{th}$ century and they continue to improve.
 
@@ -355,4 +359,17 @@ grid.arrange(p1, p2, p3, p4, ncol = 2)
 As with Life Expectancy at Birth, the biggest gains happened in the poorer countries. The lowest group however is still far from the levels reached by the other countries and still has more dispersion.
 
 ## Life Expectancy at Birth vs. DTP3 Immunization of 1-year-olds
+
+In this section, we will explore possible correlations between Life Expectancy at Birth and DTP3 immunization among 1-year-old infants.
+
+We first have to join the two datasets. As we already noticed that the LEB dataset had less countries but more years that the DTP3 dataset, we will need to subset it for the same time span and then perform a left join.
+```{r}
+period <- as.character(seq(1980, 2011))
+le_dtp <- le %>% 
+    filter(year %in% period) %>%
+    left_join(dtp_long, by = c("country", "year"))
+
+
+```
+
 
