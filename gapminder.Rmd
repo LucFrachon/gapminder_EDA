@@ -322,7 +322,7 @@ dtp_select[dtp_select$country %in% rich,
 # Build boxplots:
 p1 <- ggplot(aes(x = year, y = pct_immunized), 
              data = subset(dtp_select, 
-                           year %in% decades & country_group == "poor")) +
+                           year %in% two_y & country_group == "poor")) +
       theme_dark() +
       geom_boxplot(fill = 'lightsteelblue') +
       coord_cartesian(ylim = c(0, 100)) +
@@ -331,7 +331,7 @@ p1 <- ggplot(aes(x = year, y = pct_immunized),
 
 p2 <- ggplot(aes(x = year, y = pct_immunized), 
       data = subset(dtp_select, 
-                    year %in% decades & country_group == "mid_lower")) +
+                    year %in% two_y & country_group == "mid_lower")) +
       theme_dark() +
       geom_boxplot(fill = 'lightsteelblue') +
       coord_cartesian(ylim = c(0, 100)) +
@@ -340,7 +340,7 @@ p2 <- ggplot(aes(x = year, y = pct_immunized),
       
 p3 <- ggplot(aes(x = year, y = pct_immunized), 
       data = subset(dtp_select, 
-                    year %in% decades & country_group == "mid_upper")) +
+                    year %in% two_y & country_group == "mid_upper")) +
       theme_dark() +
       geom_boxplot(fill = 'lightsteelblue') +
       coord_cartesian(ylim = c(0, 100)) +
@@ -349,7 +349,7 @@ p3 <- ggplot(aes(x = year, y = pct_immunized),
 
 p4 <- ggplot(aes(x = year, y = pct_immunized), 
       data = subset(dtp_select, 
-                    year %in% decades & country_group == "rich")) +
+                    year %in% two_y & country_group == "rich")) +
       theme_dark() +
       geom_boxplot(fill = 'lightsteelblue') +
       coord_cartesian(ylim = c(0, 100)) +
@@ -443,4 +443,3 @@ In this part of the analysis, we made the following observations:
  - Where and when immunization is high, we tend to have the majority of observations above the LEB average. Although a few outliers tend to pull the mean down, this is a better situation than the opposite. These outliers could be due to one-off events (such a natural disasters, wars, epidemics) which, although tragic, are unlikly to occur on a regular basis.
 
 Overall this analysis shows just how much public health has improved since the middle of the 1950. Life Expectancy at Birth and DTP3 Immunization Ratio among 1-year-olds are just two metrics. The correlation between them is clear and could probably be found also with other social metrics such as litteracy. Together, they paint a rather promising picture for the world's future.
-
