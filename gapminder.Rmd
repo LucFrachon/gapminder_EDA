@@ -11,9 +11,9 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 
 # Introduction
 
-This study is a Problem Set of the "Data Analysis with R" course, part of Udacity's Data Analyst Nanodegree curriculum. In this study, we select two datasets from [Gapminder](www.gapminder.org/data) and perform exploratory analyses using different types of visualisations.  
+This study is a Problem Set of the "Data Analysis with R" course, part of Udacity's Data Analyst Nanodegree curriculum. In this document, we select three datasets from [Gapminder](www.gapminder.org/data) and perform exploratory analyses using different types of visualisations. We try to identify associations between different variables, more particularly Life Expectancy at Birth and DTP3 Immunization of 1-year-old infants.
 
-For educational purposes, we make the code visible. The code is developped using R and the following libraries: tidyr, dplyr, ggplot2, gridExtra and RColorBrewer.
+For educational purposes, we make the code visible. The code is developped using R and the following libraries: tidyr, dplyr, ggplot2, gridExtra, GGally and RColorBrewer.
 
 -----
 
@@ -36,6 +36,7 @@ require(tidyr)
 require(dplyr)
 require(ggplot2)
 require(gridExtra)
+require(GGally)
 require(RColorBrewer)
 
 # Load the data file about Life Expectancy:
@@ -44,7 +45,6 @@ le_full <- read.csv('./indicator_life_expectancy_at_birth.tsv', sep = '\t',
 
 ```
 
-Now let's take a first look at the data:
 ```{r}
 colnames(le_full)[1] <- "country"
 le_full[1:5, 1:5]
@@ -63,7 +63,7 @@ The data contains 260 countries and covers 67 years (+ the "country" column). We
 
 ## LEB distribution in 1950 vs. 2016
 
-To get a first idea of the data, we compute some summary statistics and plot the data distribution for 1950 and 2016 (first and latest year in the sample):
+For an overview idea of the data, we compute some summary statistics and plot the data distribution for 1950 and 2016 (first and latest years in the sample):
 ```{r}
 # Some summary statistics for 1950 and 2016:
 print("The World in 1950:")
@@ -79,36 +79,31 @@ p1 <- ggplot(aes(x = X1950), data = le) +
     theme_dark() +
     geom_histogram(binwidth = 1, color = 'black', fill = 'steelblue') +
     ggtitle("Life Expectancy Distribution in 1950") + 
-    scale_x_continuous(limits = c(0, 100))
+    scale_x_continuous(limits = c(20, 90))
 p2 <- ggplot(aes(x = X2016), data = le) +
     theme_dark() +
     geom_histogram(binwidth = 1, color = 'black', fill = 'steelblue') +
     ggtitle("Life Expectancy Distribution in 2016") +
-    scale_x_continuous(limits = c(0, 100))
+    scale_x_continuous(limits = c(20, 90))
 grid.arrange(p1, p2, ncol = 1)
-
-ggsave('hist_1950_2016.png')
-
 
 ```
 
-These numbers and plots show that the modern world is a radically different place to 1950. The mean LBE moved from 49.3 to 72.6 years while the minimum LBE more than doubled from 23.5 to 48.9. At the same time, the standard deviation $\sigma$ decreased from 11.8 to 7.7, meaning that not only people live longer on average, but there is also less dissimilarities between countries.
+These numbers and plots show that the modern world is a radically different place from 1950. The mean LBE moved from 49.3 to 72.6 years while the minimum LBE more than doubled from 23.5 to 48.9. At the same time, the standard deviation $\sigma$ decreased from 11.8 to 7.7, meaning that not only people live longer on average, but there is also less disparity between countries.
 
 These trends are obvious from the histograms. The whole plot shifted to the right between 1950 and 2016. The data from 1950 is more spread out and is somewhat bi-modal, hinting at well-separated groups of countries. It exhibits almost no skewness.  
 In contrast, the 2016 data is closer to unimodal, less spread out and negatively skewed (the left tail is longer than the right tail). In other words, the majority of countries are above the average -- an observation confirmed by the fact that median > mean.
 
-Moreover, every single country has improvemed their LEB:
+Moreover, every single country has improved their LEB:
 
 ```{r}
 le_decrease <- filter(le, X2016 < X1950)
 nrow(le_decrease)
 ```
 
-# Evolution of LEB over time
+## Evolution of LEB over time
 
 To get a better sense for the rate of improvement in LEB, we want to compare LEB distributions accross countries at a few regularly spaced dates. We will focus on years 1956 to 2016 by 15-year increments.
-
-## Frequency Polygons
 
 We plot the distribution for each of the selected years using frequency polygons, which allow us to represent several data series on the same plot.
 
@@ -128,7 +123,6 @@ ggplot(aes(x = life_exp), data = le_fifteen) +
     theme_dark() +
     geom_freqpoly(aes(color = year), binwidth = 5, size = 1) +
     scale_color_brewer(type = 'seq', palette = 'Blues')
-ggsave('freqpoly_1950-2016_by_decade.png')
 ```
 
 It would appear that the biggest changes happened in the earlier years of the dataset (up to 1986), with the distribution's shape shifting from bimodal to unimodal and negative skeweness. The rate of change seems comparatively slower in the years after that.
@@ -143,7 +137,6 @@ ggplot(aes(x = year, y = life_exp), data = le_five) +
     theme_dark() +
     geom_boxplot(fill = "lightsteelblue") + 
     ggtitle("Life Expectancy Worldwide, 1950-2016")
-ggsave('box_1950-2016_by_decade.png')
 ```
 
  * As noted before, the largest improvements in median values happened between 1950 and 1980 approximately,
@@ -155,9 +148,9 @@ ggsave('box_1950-2016_by_decade.png')
  
 ## Evolution by Country Wealth
 
-The shift from a bimodal distribution to unimodal with negative skewness might be hint to the fact that there were well-defined groups of countries (in terms of life expectancy) that progressively merged while improving. Typically, poor countries will tend to have lower life expectancy ([see here for an illustration of this](http://www.gapminder.org/world/#$majorMode=chart$is;shi=t;ly=2003;lb=f;il=t;fs=11;al=30;stl=t;st=t;nsl=t;se=t$wst;tts=C$ts;sp=5.59290322580644;ti=2013$zpv;v=0$inc_x;mmid=XCOORDS;iid=phAwcNAVuyj1jiMAkmq1iMg;by=ind$inc_y;mmid=YCOORDS;iid=phAwcNAVuyj2tPLxKvvnNPA;by=ind$inc_s;uniValue=8.21;iid=phAwcNAVuyj0XOoBL_n5tAQ;by=ind$inc_c;uniValue=255;gid=CATID0;by=grp$map_x;scale=log;dataMin=194;dataMax=96846$map_y;scale=lin;dataMin=23;dataMax=86$map_s;sma=49;smi=2.65$cd;bd=0$inds=;modified=60)), so we are interested in comparing the rate of improvement for different groups of countries defined by their GDP per capita. The suspicion is that poor countries improved their LEB faster than rich ones, and that this catching up explains the previous observations.
+The shift from a bimodal distribution to unimodal with negative skewness might be hint to the fact that there were well-defined groups of countries (in terms of life expectancy) that progressively merged while improving. Typically, [poor countries will tend to have lower life expectancy](http://www.gapminder.org/world/#$majorMode=chart$is;shi=t;ly=2003;lb=f;il=t;fs=11;al=30;stl=t;st=t;nsl=t;se=t$wst;tts=C$ts;sp=5.59290322580644;ti=2013$zpv;v=0$inc_x;mmid=XCOORDS;iid=phAwcNAVuyj1jiMAkmq1iMg;by=ind$inc_y;mmid=YCOORDS;iid=phAwcNAVuyj2tPLxKvvnNPA;by=ind$inc_s;uniValue=8.21;iid=phAwcNAVuyj0XOoBL_n5tAQ;by=ind$inc_c;uniValue=255;gid=CATID0;by=grp$map_x;scale=log;dataMin=194;dataMax=96846$map_y;scale=lin;dataMin=23;dataMax=86$map_s;sma=49;smi=2.65$cd;bd=0$inds=;modified=60), so we are interested in comparing the rate of improvement for different groups of countries defined by their GDP per capita. The suspicion is that poor countries improved their LEB faster than rich ones, and that this catching up explains the previous observations.
 
-For a full analysis of potential correlations, we would need to join the LEB data with GDP data but in this exploratory analysis, we just want to get a feel for the correctness of our assumption. We will therefore select only a few countries in each group.
+For a full analysis of potential correlations, we would need to join the LEB data with GDP data -- which we will do in part 3. For now, we just want to get a feel for the correctness of our assumption. We will therefore select only a few countries in each group.
 
 *Note:* The countries are classified according to their GDP per capita as of 2015.
 
@@ -222,7 +215,6 @@ p4 <- ggplot(aes(x = as.factor(year), y = life_exp),
       theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 grid.arrange(p1, p2, p3, p4, ncol = 2)
-ggsave('box_1950-2016_by_decade_by_group.png')
 ```
 
 These plots tend to confirm our assumption. IQRs are not very relevant with such small samples, but we can clearly see that medians improved significantly more for countries in the "Low GDP", "Lower-Mid GDP" and "Upper-Mid" groups (by about 25 to 27 years for each of them), than the "High GDP" group (about 14 years). Moreover, it seems that the richer the country, the slower the rate of change between 2010 and 2016.
@@ -231,19 +223,13 @@ These trends make sense, as the law of diminishing returns would apply to life e
 
 ## Recap: Observations on Life Expectancy at Birth
 
-This exploratory analysis has given us some key insights into the data. We observed that the overall LEB has improved dramatically since 1950 for every single country in the world. This improvement has been faster between 1950 and 1990 than in subsequent years, but it is still happening. Moreover, the improvement benefited poorer countries the most, which led to a much more compact distribution of LEB accross the world.
-
-A few additional ideas for analyses arise from this preliminary work:
-
- * Conduct a more complete detailed of the rate of change vs. GDP per capita,
- * Group coutries by continent,
- * Look for outliers in the rate of change and see if historical events can explain them.
+This exploratory analysis has given us some key insights into the data. We observed that the overall LEB has improved dramatically since 1950 for every single country in the world, albeit at a slower rate since the 1990s. Moreover, the improvement benefited poorer countries the most, which led to a much more compact distribution of LEB accross the world.
 
 -----
 
 # 2. Life Expectancy vs DTP3 Immunization
 
-In this second part of the analysis, we introduce a second variable, the proportion of one-year-olds immunized with 3 doses of Diphteria-Tetanus-Pertussis (DTP3). This dataset contains observations since 1980 and is also provided by [Gapminder](www.gapminder.org/data).
+In this second part of the analysis, we introduce another variable, the proportion of one-year-olds immunized with 3 doses of Diphteria-Tetanus-Pertussis (DTP3). This dataset contains observations since 1980 and is also provided by [Gapminder](www.gapminder.org/data).
 
 ## Questions:
 
@@ -261,7 +247,7 @@ colnames(dtp)[1] <- 'country'
 dim(dtp)
 ```
 
-The data contains 270 countries over 32 years (from 1980 to 2011). Note that the LEB dataset previously explored had only 260 countries but spanned a much longer period. To compare the two, we will need to abandon some of the data.
+The data contains 270 countries over 32 years (from 1980 to 2011). Note that the LEB dataset previously explored had only 260 countries but spanned a much longer period (with many missing values). To compare the two, we will need to abandon some of the data.
 
 ## Evolution of DTP3 Immunization over Time
 
@@ -273,7 +259,7 @@ dtp_long <- gather(dtp, key = year, value = pct_immunized,
 dtp_long$year <- as.factor(sub('X', '', dtp_long$year))
 ```
 
-We then build the same frequency polygon plot as with the previous dataset, selecting a few years:
+We then build a frequency polygon plot, selecting a few years:
 
 ```{r}
 ggplot(aes(x = pct_immunized), data = subset(dtp_long, year %in% c('1981', '1991', '2001', '2011'))) +
@@ -283,7 +269,7 @@ ggplot(aes(x = pct_immunized), data = subset(dtp_long, year %in% c('1981', '1991
     scale_x_continuous(limits = c(0, 100))
 ```
 
-While in 1981, the distribution of countries was very uniform, by 1991 it was already starting to display a significant peak between 80 and 100%. This trend continued in the next 20 years until the distribution looked heavily negatively skewed, with a left-tail comprising of a only a few countries. This is similar to what we witnessed with LEB, but here the phenomenon seems even more accute.
+While in 1981, the distribution of countries was very uniform, by 1991 it was already starting to display a significant peak between 80 and 100%. This trend continued in the next 20 years until the distribution looked heavily negatively skewed, with a left-tail comprising of a only a few countries. This is similar to what we witnessed with LEB, but here the phenomenon seems even more accute and much faster.
 
 ```{r}
 
@@ -355,7 +341,7 @@ p4 <- ggplot(aes(x = year, y = pct_immunized),
 grid.arrange(p1, p2, p3, p4, ncol = 2)
 ```
 
-As with Life Expectancy at Birth, the biggest gains happened in the poorer countries. The lowest group however is still far from the levels reached by the other countries and still has more variance.
+As with Life Expectancy at Birth, the biggest gains happened in the poorer countries. The median values are more erratic than with life expectancy. A larger sample would probably fix that. The lowest group however is still far from the levels reached by the other countries.
 
 ## Life Expectancy at Birth vs. DTP3 Immunization of 1-year-olds
 
@@ -380,11 +366,10 @@ ggplot(data = le_dtp, aes(x = pct_immunized, y = life_exp)) +
     coord_cartesian(ylim = c(30, 90))
 ```
 
-Here, each observation or dot on the plot is a combination of a country and a year.
-There seems to be a relatively linear correlation between LEB and DTP3 Immunization. 
+Here, each observation or dot on the plot is a combination of a country and a year. There seems to be a relatively linear correlation between LEB and DTP3 Immunization. 
 
 ```{r}
-cor.test(le_dtp$pct_immunized, le_dtp$life_exp, )
+cor.test(le_dtp$pct_immunized, le_dtp$life_exp)
 ```
 
 This confirms that there is a moderate to strong positive correlation.
@@ -392,15 +377,13 @@ This confirms that there is a moderate to strong positive correlation.
 To improve the plot and give it a sense of progression over time, we can group observations by 5-year periods. We can also add the linear regression line (brown), the mean (blue), the median (white, solid) and the .1 and .9 quantiles (white, dashed) for LEB as a function of Immunization:
 
 ```{r}
-le_dtp$period <- NA
-le_dtp$period[le_dtp$year < 1985] <- "1981-1984"
-le_dtp$period[le_dtp$year >= 1985 & le_dtp$year < 1990] <- "1985-1989"
-le_dtp$period[le_dtp$year >= 1990 & le_dtp$year < 1995] <- "1990-1994"
-le_dtp$period[le_dtp$year >= 1995 & le_dtp$year < 2000] <- "1995-1999"
-le_dtp$period[le_dtp$year >= 2000 & le_dtp$year < 2004] <- "2000-2004"
-le_dtp$period[le_dtp$year >= 2005 & le_dtp$year < 2009] <- "2005-2009"
-le_dtp$period[le_dtp$year >= 2010] <- "2010-2011"
-
+le_dtp$period <- cut(le_dtp$year, 
+                     breaks = c(seq(1980, 2010, 5), 2011),
+                     labels = c("1980-1984", "1985-1989",
+                                "1990-1994", "1995-1999",
+                                "2000-2004", "2005-2009",
+                                "2010-2011"),
+                     include.lowest = TRUE, right = TRUE)
 ggplot(data = le_dtp, aes(x = pct_immunized, y = life_exp)) +
     scale_colour_brewer(type = 'div', palette = 'Spectral') +
     geom_jitter(aes(colour = period), alpha = '0.15', height = 0, width = .4) +
@@ -427,18 +410,313 @@ Moreover, the 0.1-0.9 quantile range tends to narrow down as we progress towards
 We can also remark that the mean and median lines remain intertwined for the most part, except over 80% immunization where the LEB median becomes consistently higher than the mean by a few years. 
 
 From all the observations above, we can conclude that a high immunization ratio is associated with:
+
  - Higher life expectancy,
  - Smaller variance in life expectancy between observations,
- - A slightly negative skewness that means that a minority of countries/year pairs are lowering the mean by significantly lower LEB values, but the majority is actually above the mean. We can clearly see a number of outliers in the lower-right part of the plot (between 80% and 100% immunization and 40 to 55 years old, approximately).
+ - A slightly negative skewness that indicates that although a minority of countries/year pairs is lowering the mean by poor LEB values, the majority is actually above the mean. We can clearly see a number of outliers in the lower-right part of the plot (between 80% and 100% immunization and 40 to 55 years old, approximately).
 
 ## Recap: Observations on Immunization vs. Life Expectancy
 
 In this part of the analysis, we made the following observations:
 
- - The DTP3 Immunization percentage among 1-year-old followed a similar pattern to Life Expectancy at Birth: A rapid progress since 1980, a reduction in the variance accross countries and poorer countries catching up with rich ones,
- - There is a robust positive correlation (over .6) between Immunization and Life Expectancy,
- - Where and when immunization is high, we tend to have the majority of observations above the LEB average. Although a few outliers tend to pull the mean down, this is a better situation than the opposite. These outliers could be due to one-off events (such a natural disasters, wars, epidemics) which, although tragic, are unlikely to occur on a regular basis.
+ - The DTP3 Immunization percentage among 1-year-old followed a similar pattern to Life Expectancy at Birth (but in half as many years): A rapid progress, a reduction in the variance accross countries, poorer countries catching up with rich ones;
+ - There is a robust positive correlation (over .6) between Immunization and Life Expectancy;
+ - Where and when immunization is high, we tend to have the majority of observations above the LEB average. Although a few outliers tend to pull the mean down, this is a more desirable situation than the opposite. These outliers could be due to one-off events (such a natural disasters, wars, epidemics) which, although tragic, are unlikely to occur on a regular basis.
+
+---
+
+# 3. Life Expectancy at Birth and DTP3 Immunization vs. GDP per capita
+
+In this section, we are going to cross-analyse the previous two variables against GDP per capita much more accurately.
+
+## Questions:
+
+The questions we would like to answer are:
+
+ - What associations exist between our three variables?
+ - How do LEB and DTP3 Immunization evolve over time for the different wealth quartiles? (A more robust version of the analyses performed in Parts 1 and 2)
+ - Is the relationship between LEB and DTP3 Immunization only due to economic growth, acting as a hidden variable, or is there a direct association between the two?
+
+We again pull our GDP dataset from [Gapminder](www.gapminder.org/data) -- this time the data is GDP/capita (US$, inflation-adjusted).
+
+```{r}
+gdp <- read.csv('./GDPpercapitaconstant2000US.tsv', sep = '\t')
+colnames(gdp)[1] <- "country"
+colnames(gdp)[2 : 53] <- sub("X", "", colnames(gdp)[2 : 53])
+gdp[1:5, 1:5]
+```
+
+The dataset contains inflation-adjusted GDP per capita values for 275 countries since 1960. However there are many missing values, particularly before 1980. As this is also the starting point for the combined LEB/DTP3 dataset, we drop any prior columns, convert it to a long format then left-join this dataset with the dataset:
+
+```{r}
+gdp_long <- gather(gdp, key = year, value = gdp_cap, -country)
+gdp_long$year <- as.numeric(gdp_long$year)
+le_dtp_gdp <- gdp_long %>% 
+    filter(year %in% period) %>%  # Susbset for the period 1980-2011
+    left_join(le_dtp, by = c("country", "year"))
+```
+
+## Correlations
+
+We can now plot these variables against each other:
+
+```{r}
+ggpairs(le_dtp_gdp[, 3:5])
+```
+
+To improve the plot we add the variable ```gdp_cap_log``` which is the base 10-logarithm of ```gdp_cap``` and plot again with refined aesthetics and linear smoothers:
+
+```{r}
+le_dtp_gdp$gdp_cap_log <- log10(le_dtp_gdp$gdp_cap)
+
+custom_points <- function(data, mapping, ...) {
+    ggplot(data = data, mapping = mapping) +
+        geom_point(..., alpha = .2, color = 'lightsteelblue') +
+        geom_smooth(method = 'lm')
+}
+    
+ggpairs(select(le_dtp_gdp, gdp_cap_log, life_exp, pct_immunized),
+        lower = list(continuous = custom_points))
+```
+
+Using log values for GDP per capita improves the linear correlation significantly -- we now have a strong correlation (.80) with life expectancy and a medium one with immunization (.51).
+
+We also see that when using log values, the GDP/capita distribution accross country/year pairs is much more balanced and exhibits almost no skewness, whereas it was heavily skewed (positively) using raw values: Only a few rich country/year pairs are contained in the long right tail.
+In the context of building a predictive model, a log transformation on GDP/capita would be strongly recommended.
+
+## Analysis by GDP/capita quantile
+
+With the GDP/capita data, we can now have a much more rigourous approach to the analyses by country group that we ran in the previous sections.
+
+We first plot life expectancy against immunization, colouring by GDP/capita:
+
+```{r}
+ggplot(data = le_dtp_gdp, aes(x = pct_immunized, y = life_exp)) +
+    scale_color_continuous(low = "#132B43", high = "#56B1F7") +
+    geom_jitter(aes(colour = gdp_cap_log), 
+                    alpha = '0.15', height = 0, width = .4) +
+    geom_smooth(formula = y ~ x, method = 'lm', colour = 'brown') +
+    geom_line(stat = 'summary', fun.y = "mean", 
+              fun.args = list(na.rm = TRUE),
+              color = 'blue') +
+    geom_line(stat = 'summary', fun.y = "quantile", 
+              fun.args = list(na.rm = TRUE, prob = .1),
+              linetype = 2, color = 'white') +
+    geom_line(stat = 'summary', fun.y = "quantile", 
+              fun.args = list(na.rm = TRUE, prob = .5),
+              color = 'white') +
+    geom_line(stat = 'summary', fun.y = "quantile", 
+              fun.args = list(na.rm = TRUE, prob = .9),
+              linetype = 2, color = 'white') +
+    theme_dark() +
+    coord_cartesian(ylim = c(30, 90))
+```
+
+To improve the plot's readability, we can create groups by GDP/capita. Let's use quartiles:
+
+```{r}
+le_dtp_gdp$gdp_quartile <- with(le_dtp_gdp, 
+                                cut(gdp_cap, 
+                                breaks = quantile(gdp_cap, 
+                                                  probs = 
+                                                      seq(
+                                                      0., 1., by = 0.25),
+                                                  na.rm = TRUE), 
+                                labels = c(
+                                    "Low", "Lower-Mid", "Higher-Mid", "High"),
+                                include.lowest=TRUE))
+
+ggplot(data = subset(le_dtp_gdp, !is.na(gdp_quartile)), 
+       aes(x = pct_immunized, y = life_exp)) +
+    scale_color_brewer(type = 'qual', palette = 2) +
+    geom_jitter(aes(colour = gdp_quartile), 
+                    alpha = '0.5', height = 0, width = .4) +
+    geom_smooth(formula = y ~ x, method = 'lm', colour = 'brown') +
+    geom_line(stat = 'summary', fun.y = "mean", 
+              fun.args = list(na.rm = TRUE),
+              color = 'blue') +
+    geom_line(stat = 'summary', fun.y = "quantile", 
+              fun.args = list(na.rm = TRUE, prob = .1),
+              linetype = 2, color = 'white') +
+    geom_line(stat = 'summary', fun.y = "quantile", 
+              fun.args = list(na.rm = TRUE, prob = .5),
+              color = 'white') +
+    geom_line(stat = 'summary', fun.y = "quantile", 
+              fun.args = list(na.rm = TRUE, prob = .9),
+              linetype = 2, color = 'white') +
+    theme_dark() +
+    coord_cartesian(ylim = c(30, 90))
+
+```
+
+On the plot, we can clearly see "layers" by colour: at the bottom are the Low GDP countries and at the top the richest countries.
+
+But maybe the correlation between Life Expectancy and Immmunization only exists through GRP/capita? In other words, richer countries tend to have higher life expectancy, and they also happen to have higher immunization ratios.
+
+To try and reduce the influence of GDP/capita on the other two variables, we can plot them by wealth group:
+
+```{r}
+ggplot(data = subset(le_dtp_gdp, !is.na(gdp_quartile)), 
+       aes(x = pct_immunized, y = life_exp)) +
+    geom_jitter(colour = 'lightsteelblue',  
+                    alpha = '0.3', height = 0, width = .4) +
+    theme_dark() +
+    coord_cartesian(ylim = c(40, 90)) +
+    facet_wrap( ~ gdp_quartile, ncol = 2)
+```
+
+The correlations are still there, but in the two middle categories we can see a large number of outliers that have high immunization and low life expectancy. Let's look at them in more detail:
+
+```{r}
+high_immu_low_le <- subset(le_dtp_gdp, 
+       gdp_quartile %in% c("Lower-Mid", "Higher-Mid") & 
+           pct_immunized > 80 & life_exp < 57)
+
+group_by(high_immu_low_le, country, period) %>%
+    summarise(mean_le = mean(life_exp), mean_immu = mean(pct_immunized))
+
+```
+
+These outliers are African countries, some of which are recovering from a troubled history (Angola, Equatorial Guinea).
+
+There are also outliers in the High GDP group, whose average life expectancy is fairly high but immunization is low.
+
+```{r}
+rich_low_immu <- subset(le_dtp_gdp, 
+       gdp_quartile == "High" & pct_immunized < 50)
+
+group_by(rich_low_immu, country, period) %>%
+    summarise(mean_le = mean(life_exp), mean_immu = mean(pct_immunized))
+```
+
+These outliers correspond to the early years of the dataset. Some are countries that increased their wealth rapidly over the last 30 years (thus had more of a "developping country" profile during the 1980s). Public immunization policies are also likely to have played a role in explaning the low immunization rate in the 1980s.
+Note that in the case of Italy, the extremely low values for Italy are all the more surprising that in 1986, the immunization rate suddenly jumped to 98% according to the data. Despite some Internet research, we could not find an evidence of a major shift in policy at that time, so we cannot exclude that there are errors in the data.
+
+
+Now that we have rigorously defined categories for countries, we can re-run the plots that we made in parts 1 and 2 and see how life expectancy and immunization evolved for each quartile. We are, however, limited to post-1980 data because of the GDP/capita dataset.
+
+**Life Expectancy at Birth:**
+
+```{r}
+years_select <- seq(1981, 2011, 2)
+ggplot(data = subset(le_dtp_gdp, 
+                     year %in% years_select & 
+                     !is.na(life_exp) & 
+                     !is.na(gdp_quartile)), 
+       aes(x = as.factor(year), y = life_exp)) +
+    theme_dark() +
+    geom_boxplot(fill = 'lightsteelblue') +
+    coord_cartesian(ylim = c(45, 85)) +
+    xlab('Year') + ylab('Life Expectancy at Birth') +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+    facet_wrap(~ gdp_quartile, ncol = 2)
+
+```
+
+
+In this shorter period of time, the differences in the rate of improvement of life expectancy are less obvious than on the 60-year plot of Part 1. 
+However it is quite interesting to observe that each of the first three groups' median life expectancy in 2011 is very close to the next group's median life expectancy in 1981, as if there was a 30-year gap in development between each quartile (as far as life expectancy is concerned).
+
+
+**DTP3 Immunization of 1-year-olds:**
+
+```{r}
+ggplot(data = subset(le_dtp_gdp, 
+                     year %in% years_select & 
+                     !is.na(pct_immunized) & 
+                     !is.na(gdp_quartile)), 
+       aes(x = as.factor(year), y = pct_immunized)) +
+    theme_dark() +
+    geom_boxplot(fill = 'lightsteelblue') +
+    coord_cartesian(ylim = c(0, 100)) +
+    xlab('Year') + ylab('DTP3 Immunization of 1-yo infants') +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+    facet_wrap(~ gdp_quartile, ncol = 2)
+
+```
+
+This confirms the spectacular catch-up performed by countries at the lower-end of the wealth spectrum. Naturally, rich countries are already at almost 100% immunization, therefore they are no longer growing significantly.
+
+
+## Removing the association with GDP/capita
+
+To further dissociate life expectancy and DTP3 immunization from their association with GDP per capita, we can create a new variable called ```le_by_log_gdp``` that is calculated as follow:
+
+$le\_by\_log\_gdp = \frac{life\_exp}{log_{10}(gdp\_cap)}$
+
+
+```{r}
+le_dtp_gdp$le_by_log_gdp <- with(le_dtp_gdp,
+                                 life_exp / gdp_cap_log)
+ggplot(data = subset(le_dtp_gdp, year %in% c(1981, 1991, 2001, 2011)),
+      aes(x = gdp_cap_log, y = le_by_log_gdp)) +
+    geom_point(aes(colour = as.factor(year))) +
+    scale_colour_discrete() +
+    theme_dark() +
+    geom_smooth(method = 'lm')
+```
+
+There we discover an unexpected relationship: There seems to be a negative linear correlation between le_by_log_gdp and gdp_cap_log.
+In other words, the higher the wealth of a country, the smaller the gain in life expectancy for every further increase in wealth. This is again the law of diminishing returns at play.
+We can however notice that these further increments are themselves increasing in size over time: As technology and healthcare improve, each increment in wealth generates a larger increment in life expectancy. We can see this because the earlier years tend to be below the more recent ones on the plot.
+
+What are the parameters of this correlation?
+
+```{r}
+with(le_dtp_gdp, cor.test(gdp_cap_log, le_by_log_gdp))
+lm(data = le_dtp_gdp, le_by_log_gdp ~ gdp_cap_log)
+```
+
+We can use these results to build a new expression for life expectancy as a function of GDP per capita:
+
+$$
+\begin{aligned}
+\frac{life\_exp}{log_{10}(gdp\_cap)} &\approx  -2.919 \times log_{10}(gdp\_cap) + 30.406 \\
+
+Define: \\
+le\_gdp\_const &= \frac{life\_exp}{log_{10}(gdp\_cap)} + 2.919 \times log_{10}(gdp\_cap) \approx 30.406 \\
+\end{aligned}
+$$
+
+This new variable should be almost constant around 30.406. We add it to our dataset and look at its distribution:
+
+```{r}
+le_dtp_gdp$le_gdp_const <- with(le_dtp_gdp, 
+                                le_by_log_gdp + 2.919 * gdp_cap_log)
+qplot(data = le_dtp_gdp, le_gdp_const, fill = I('lightsteelblue'),
+      colour = I('steelblue'), binwidth = .2) +
+    theme_dark()
+```
+
+Indeed, the new variable has a narrow normal distribution with a maximum between 30 and 31. Plotting this variable against ```pct_immunized``` should allow us to almost completely remove the association to GDP/capita:
+
+```{r}
+ggplot(data = subset(le_dtp_gdp, !is.na(gdp_quartile)), 
+       aes(x = pct_immunized, y = le_gdp_const)) +
+    geom_jitter(colour = 'lightsteelblue', width = .2, height = 0.,
+                    alpha = '0.3') +
+    theme_dark() +
+    coord_cartesian(ylim = c(25, 35))
+```
+
+```{r}
+with(le_dtp_gdp, cor.test(pct_immunized, le_gdp_const))
+```
+
+The correlation between LEB and immunization is now weaker but still highly significant ($ p < 2 \times 10^{-16}$). It is about half of the correlation we found when using the raw life expectancy values.
+
+## Recap: Observations on life expectancy and immunization vs GDP/capita
+
+In this section, we achieved the following results:
+ 
+ - We demonstrated a strong correlation between GDP/capita and LEB and a moderate correlation between GDP/capita and DTP3 Immunization at 1-year-old,
+ - We found that the correlation between LEB and DTP3 Immmunization exists within every quartile of GDP/capita and identified some of the outliers,
+ - We confirmed the results of parts 1 and 2 related to the rate of improvement of both LEB and DTP3 Immunization for each of the GDP quartiles,
+ - Discovered a formula to approximate the relationship between LEB and GDP/capita,
+ - Used this formula to remove most of the association of life expectancy to GDP/capita and thus demonstrate a weak to moderate, but highly significant, correlation between life expectancy and immunization.
 
 # Conclusion
 
-Overall this analysis shows just how much public health has improved since the middle of the 1950, especially in poorer countries. Life Expectancy at Birth and DTP3 Immunization Ratio among 1-year-olds are just two metrics. The correlation between them is clear and could probably be found also with other social metrics such as litteracy. Together, they paint a rather promising picture for the world's future.
+Overall this analysis shows just how much public health has improved since the middle of the XX$^{th}$ century, especially in poorer countries. Life Expectancy at Birth and DTP3 Immunization Ratio among 1-year-olds have both improved dramatically in every country, regardless of their wealth. They remain clearly associated with the GDP per capita, but the poorer countries have been catching up relentlessly.
+
+In terms of public health policy, we also showed that DTP Imunization of 1-year-olds and Life Expectancy at Birth are directly correlated, and not just through economic growth. Although this does not prove a cause-consequence relationship, this observation advocates for comprehensive immunization campaigns of young infants.
